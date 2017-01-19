@@ -1,0 +1,52 @@
+---
+#- name: Install moreutils (For the ts package)
+#  apt:
+#    name: "{{ item }}"
+#  with_items:
+#      - moreutils
+- include: virtualenv.yml
+
+- name: Create scripts directory if it doesn't exist
+  file:
+    path: "{{ scripts_dir }}"
+    state: directory
+    owner: "{{ scripts_owner }}"
+    group: "{{ scripts_group }}"
+    mode: 0755
+
+- name: Write an empty file /tmp/emptyfile
+  file:
+    path: /tmp/emptyfile
+    state: touch
+    owner: www-data
+    group: www-data
+    mode: 0640
+
+- name: Download the awslogs-agent-setup.py script
+  get_url:
+    dest: /tmp/awslogs-agent-setup.py
+    group: root
+    owner: root
+    mode: 0600
+    url: https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py
+
+- name: Install the AWS CloudWatch Logs daemon
+  shell: python /tmp/awslogs-agent-setup.py --non-interactive --region=eu-central-1 --configfile=/tmp/emptyfile
+
+- name: Write the cloudwatch logs template file
+  copy:
+    src: awslogs-agent.conf.j2
+    dest: "{{ scripts_dir }}/awslogs-agent.conf.j2"
+
+- name: Install configure_cloudwatch_logs.py which renders the above into /var/awslogs/etc/awslogs.conf
+  copy:
+    src: configure_cloudwatch_logs.py
+    dest: "{{ scripts_dir }}/configure_cloudwatch_logs.py"
+
+- name: Install Upstart script which calls configure_cloudwatch_logs.py at boot time
+  template:
+    src: configure_cloudwatch_logs.j2
+    dest: /etc/init/configure_cloudwatch_logs.conf
+    mode: 0644
+    owner: root
+    group: root

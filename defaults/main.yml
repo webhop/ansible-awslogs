@@ -1,0 +1,4 @@
+virtualenv_dir: /opt/beamly/virtualenvs
+scripts_dir: /opt/beamly/scripts
+scripts_owner: root
+scripts_group: root

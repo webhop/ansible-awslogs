@@ -1,0 +1,17 @@
+description "Upstart task for Configuring Cloudwatch logs"
+author "Beamly Platform Team <platform@beamly.com>"
+
+start on filesystem
+
+task
+console log
+
+script
+
+    echo "Starting cloudwatch logs retention/metrics configuration..."
+    {{ virtualenv_dir }}/syslog-cloudwatch/bin/python {{ scripts_dir }}/configure_cloudwatch_logs.py
+
+    echo "Restarting the awslog (Cloudwatch logs) daemon..."
+    /usr/sbin/service awslogs restart
+
+end script

@@ -1,0 +1,28 @@
+---
+- name: Install virtualenv package
+  pip:
+      name: virtualenv
+      state: latest
+
+- name: Create virtualenv directory if it doesn't exist
+  file:
+    path: "{{ virtualenv_dir }}/syslog-cloudwatch"
+    state: directory
+    owner: "{{ scripts_owner }}"
+    group: "{{ scripts_group }}"
+    mode: 0755
+
+- name: Copy the requirements file
+  copy:
+    src: requirements.txt
+    dest: "{{ scripts_dir }}/syslog-cloudwatch/requirements.txt"
+    owner: "{{ scripts_owner }}"
+    group: "{{ scripts_group }}"
+    mode: 0755
+  when: create_virtualenv
+
+- name: Create virtualenv if create_virtualenv
+  pip:
+    requirements: "{{ scripts_dir }}/syslog-cloudwatch/requirements.txt"
+    virtualenv: "{{ virtualenv_dir }}/syslog-cloudwatch"
+  when: create_virtualenv
