@@ -1,0 +1,17 @@
+# contains only general config
+# per-component stream configurations go into /var/awslogs/etc/config
+# see http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AgentReference.html#create-additional-configuration-files
+
+[general]
+state_file = /var/awslogs/state/agent-state
+
+# downstream roles should add blocks like the one below
+#
+# [/var/log/your/logfile.log]
+# file = /var/log/your/logfile.log
+# log_group_name = {{ env }}-{{ brand }}-/var/log/your/logfile.log
+# log_stream_name = {instance_id}
+# datetime_format = %b %d %H:%M:%S
+# batch_size = 10
+#
+# into their own config file under /var/awslogs/etc/config
