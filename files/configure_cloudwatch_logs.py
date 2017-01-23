@@ -13,7 +13,7 @@ from boto import ec2, utils, logs
 
 LOG = logging.getLogger(__name__)
 
-import configure_cloudwatch_logs
+import logs_group_configuration
 
 RENDER_FILES = {'/opt/beamly/scripts/awslogs-agent.conf.j2': '/var/awslogs/etc/awslogs.conf'}
 
