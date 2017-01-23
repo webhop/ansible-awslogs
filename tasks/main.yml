@@ -44,6 +44,11 @@
     src: configure_cloudwatch_logs.py
     dest: "{{ scripts_dir }}/configure_cloudwatch_logs.py"
 
+- name: Install logs_group_configuration.py which is included by the above
+  copy:
+    src: logs_group_configuration.py
+    dest: "{{ scripts_dir }}/logs_group_configuration.py"
+
 - name: Install Upstart script which calls configure_cloudwatch_logs.py at boot time
   template:
     src: configure_cloudwatch_logs.j2
