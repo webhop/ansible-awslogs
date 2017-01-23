@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  author: Vasco Figueira <vasco@beamly.com>
+  description: Common awslogs configuration and setup
+  company: Beamly
+  license: license (GPLv2, CC-BY, etc)
+  min_ansible_version: 1.2
+dependencies: []
