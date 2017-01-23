@@ -4,7 +4,6 @@
 #    name: "{{ item }}"
 #  with_items:
 #      - moreutils
-- include: virtualenv.yml
 
 - name: Create scripts directory if it doesn't exist
   file:
@@ -13,6 +12,8 @@
     owner: "{{ scripts_owner }}"
     group: "{{ scripts_group }}"
     mode: 0755
+
+- include: virtualenv.yml
 
 - name: Write an empty file /tmp/emptyfile
   file:

@@ -6,7 +6,7 @@
 
 - name: Create virtualenv directory if it doesn't exist
   file:
-    path: "{{ virtualenv_dir }}/syslog-cloudwatch"
+    path: "{{ virtualenv_dir }}/awslogs"
     state: directory
     owner: "{{ scripts_owner }}"
     group: "{{ scripts_group }}"
@@ -15,7 +15,7 @@
 - name: Copy the requirements file
   copy:
     src: requirements.txt
-    dest: "{{ scripts_dir }}/syslog-cloudwatch/requirements.txt"
+    dest: "{{ scripts_dir }}/awslogs-requirements.txt"
     owner: "{{ scripts_owner }}"
     group: "{{ scripts_group }}"
     mode: 0755
@@ -23,6 +23,6 @@
 
 - name: Create virtualenv if create_virtualenv
   pip:
-    requirements: "{{ scripts_dir }}/syslog-cloudwatch/requirements.txt"
-    virtualenv: "{{ virtualenv_dir }}/syslog-cloudwatch"
+    requirements: "{{ scripts_dir }}/awslogs-requirements.txt"
+    virtualenv: "{{ virtualenv_dir }}/awslogs"
   when: create_virtualenv
