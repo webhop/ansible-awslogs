@@ -14,7 +14,7 @@ from boto import ec2, utils, logs
 
 LOG = logging.getLogger(__name__)
 
-import logs_group_configuration
+from logs_group_configuration import LOGS_GROUP_CONFIGURATION
 
 
 def get_instance_config():
@@ -104,8 +104,8 @@ def configure_logging(args):
         except:
             LOG.error("Couldn't find log group {0}".format(log_group_name))
 
-        for metric_filter in LOGS_GROUP_CONFIGURATION[log_group]['metric_filters']:
-            filter_name = metric_filter['name']  % template_vars
+        for metric_filter in LOGS_GROUP_CONFIGURATION[log_group].get('metric_filters', []):
+            filter_name = metric_filter['name'] % template_vars
             filter_pattern = metric_filter['filter_pattern']
             metric_transformations = metric_filter['metric_transformations']
             LOG.info("Applying metric filter {0} to {1}".format(filter_name, log_group_name))
