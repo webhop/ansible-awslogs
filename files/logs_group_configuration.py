@@ -37,8 +37,8 @@
 # their values and applies these configs to AWS.
 
 LOGS_GROUP_CONFIGURATION = {
+    # '%(env)s-%(brand)s-/var/log/cloud-init.log': {
+    #     'retention_days': 2
+    # },
     # COMPONENT_SPECIFIC_CONF_BLOCKS_FOLLOW
-    '%(env)s-%(brand)s-/var/log/apache2/error.log': {
-        'retention_days': 14
-    }
 }
