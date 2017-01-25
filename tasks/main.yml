@@ -44,7 +44,7 @@
   file:
     path: "{{ agent_config_dir }}"
     state: directory
-    owner: "{{ scripts_user }}"
+    owner: "{{ scripts_owner }}"
     group: "{{ scripts_group }}"
     mode: 0755
     recurse: yes
