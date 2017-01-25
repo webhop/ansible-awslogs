@@ -1,4 +1,5 @@
 virtualenv_dir: /opt/beamly/virtualenvs
 scripts_dir: /opt/beamly/scripts
+agent_config_dir: /opt/beamly/config/awslogs-agent-config
 scripts_owner: root
 scripts_group: root

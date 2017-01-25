@@ -5,6 +5,7 @@ Write the cloudwatch logs configuration file
 '''
 import logging
 import os
+import sys
 import boto
 import hashlib
 import re
@@ -15,7 +16,6 @@ LOG = logging.getLogger(__name__)
 
 import logs_group_configuration
 
-RENDER_FILES = {'/opt/beamly/scripts/awslogs-agent.conf.j2': '/var/awslogs/etc/awslogs.conf'}
 
 def get_instance_config():
     """
@@ -57,7 +57,7 @@ def get_my_instance_object(instance_id):
             return instance
 
 
-def configure_logging():
+def configure_logging(args):
     LOG.info("Getting instance metadata...")
     inst_config = get_instance_config()
     region = inst_config["region"]
@@ -76,9 +76,19 @@ def configure_logging():
     templateLoader = jinja2.FileSystemLoader(searchpath="/")
     templateEnv = jinja2.Environment(loader=templateLoader)
 
-    for template_source in RENDER_FILES:
+    config_template_folder = args[1]
+    LOG.info("Reading awslogs agent configuration templates from {0}".format(config_template_folder))
+    template_filenames = filter(lambda name: name.endswith(".conf.j2"), os.listdir(config_template_folder))
+    render_map = dict(map(lambda file:
+             ("{0}/{1}".format(config_template_folder, file), "/var/awslogs/etc/config/{0}".format(file[:-3])),
+             template_filenames))
+    # also render the main configuration file
+    render_map[args[2]] = "/var/awslogs/etc/awslogs.conf"
+
+    LOG.info("Rendering the following awslogs agent configuration templates: {0}".format(render_map))
+    for template_source in render_map:
         template = templateEnv.get_template(template_source)
-        template_render_target = RENDER_FILES[template_source]
+        template_render_target = render_map[template_source]
 
         with open(template_render_target, 'w') as f:
             f.write(template.render(template_vars))
@@ -104,4 +114,4 @@ def configure_logging():
 if __name__ == "__main__":
     FORMAT = "%(asctime)-15s : %(levelname)-8s : %(message)s"
     logging.basicConfig(format=FORMAT, level=logging.INFO)
-    configure_logging()
+    configure_logging(sys.argv)

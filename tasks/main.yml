@@ -5,13 +5,14 @@
 #  with_items:
 #      - moreutils
 
-- name: Create scripts directory if it doesn't exist
+- name: "Ensure {{ scripts_dir }} exists"
   file:
     path: "{{ scripts_dir }}"
     state: directory
     owner: "{{ scripts_owner }}"
     group: "{{ scripts_group }}"
     mode: 0755
+    recurse: yes
 
 - include: virtualenv.yml
 
@@ -34,12 +35,21 @@
 - name: Install the AWS CloudWatch Logs daemon
   shell: python /tmp/awslogs-agent-setup.py --non-interactive --region=eu-central-1 --configfile=/tmp/emptyfile
 
-- name: Write the cloudwatch logs template file
+- name: Install the cloudwatch agent config template
   copy:
     src: awslogs-agent.conf.j2
     dest: "{{ scripts_dir }}/awslogs-agent.conf.j2"
 
-- name: Install configure_cloudwatch_logs.py which renders the above into /var/awslogs/etc/awslogs.conf
+- name: "Ensure {{ agent_config_dir }} exists for clients to put their config"
+  file:
+    path: "{{ agent_config_dir }}"
+    state: directory
+    owner: "{{ scripts_user }}"
+    group: "{{ scripts_group }}"
+    mode: 0755
+    recurse: yes
+
+- name: Install configure_cloudwatch_logs.py which renders the above into /var/awslogs/etc/{awslogs.conf|config}
   copy:
     src: configure_cloudwatch_logs.py
     dest: "{{ scripts_dir }}/configure_cloudwatch_logs.py"
