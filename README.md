@@ -83,7 +83,18 @@ Now you need to actually setup the logging configuration, one for the agent and 
   copy:
     src: mymodule-awslogs-agent.conf.j2
     dest: "{{ awslogs_agent_config_dir }}/mymodule.conf.j2"
+```
+where `mymodule-awslogs-agent.conf.j2` contains one or more of the agent-side logstream configuration blocks as per above. Example:
+```
+[/var/log/apache2/error.log]
+file = /var/log/apache2/error.log
+log_group_name = {{ env }}-{{ brand }}-/var/log/apache2/error.log
+log_stream_name = {instance_id}
+datetime_format = [%a %b %d %H:%M:%S.%f %Y]
+batch_size = 10
+```
 
+```yaml
 - name: Add log_group configuration block for apache
   blockinfile:
     dest: "{{ scripts_dir }}/logs_group_configuration.py"
