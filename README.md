@@ -75,8 +75,9 @@ If you are a role you might want to expose to your dependents the option of havi
 
 If you're not a role but rather a playbook add it to your `requirements.yml` and use it like any other role in your `tasks/main.yml`.
 
-Now you need to actually setup the logging configuration, one for the agent and another for the AWS sides.
+Now you need to actually setup the logging configuration.
 
+One for the agent…
 ```yaml
 # awslogs_agent_config_dir variable comes form awslogs role
 - name: "Install the apache config template into {{ awslogs_agent_config_dir }}"
@@ -84,7 +85,7 @@ Now you need to actually setup the logging configuration, one for the agent and 
     src: mymodule-awslogs-agent.conf.j2
     dest: "{{ awslogs_agent_config_dir }}/mymodule.conf.j2"
 ```
-where `mymodule-awslogs-agent.conf.j2` contains one or more of the agent-side logstream configuration blocks as per above. Example:
+…where `mymodule-awslogs-agent.conf.j2` contains one or more of the agent-side logstream configuration blocks as per above. Example:
 ```
 [/var/log/apache2/error.log]
 file = /var/log/apache2/error.log
@@ -93,7 +94,7 @@ log_stream_name = {instance_id}
 datetime_format = [%a %b %d %H:%M:%S.%f %Y]
 batch_size = 10
 ```
-
+…and another for the AWS side:
 ```yaml
 - name: Add log_group configuration block for apache
   blockinfile:
@@ -128,4 +129,4 @@ batch_size = 10
 Notes:
  - the variable `awslogs_agent_config_dir` is defined by this role (if you've included it).
  - the `insertafter` param is critical — don't change it.
- - the last comma is necessary because yours might not be the last fragment (and Python allows for trailing commas).
+ - the last comma is necessary because yours might not be the last fragment (and Python allows for trailing commas :win:).
