@@ -5,9 +5,9 @@
 #  with_items:
 #      - moreutils
 
-- name: "Ensure {{ scripts_dir }} exists"
+- name: "Ensure {{ awslogs_scripts_dir }} exists"
   file:
-    path: "{{ scripts_dir }}"
+    path: "{{ awslogs_scripts_dir }}"
     state: directory
     owner: "{{ scripts_owner }}"
     group: "{{ scripts_group }}"
@@ -38,7 +38,7 @@
 - name: Install the cloudwatch agent config template
   copy:
     src: awslogs-agent.conf.j2
-    dest: "{{ scripts_dir }}/awslogs-agent.conf.j2"
+    dest: "{{ awslogs_scripts_dir }}/awslogs-agent.conf.j2"
 
 - name: "Ensure {{ awslogs_agent_config_dir }} exists for clients to put their config"
   file:
@@ -52,12 +52,12 @@
 - name: Install configure_cloudwatch_logs.py which renders the above into /var/awslogs/etc/{awslogs.conf|config}
   copy:
     src: configure_cloudwatch_logs.py
-    dest: "{{ scripts_dir }}/configure_cloudwatch_logs.py"
+    dest: "{{ awslogs_scripts_dir }}/configure_cloudwatch_logs.py"
 
 - name: Install logs_group_configuration.py which is included by the above
   copy:
     src: logs_group_configuration.py
-    dest: "{{ scripts_dir }}/logs_group_configuration.py"
+    dest: "{{ awslogs_scripts_dir }}/logs_group_configuration.py"
 
 - name: Install Upstart script which calls configure_cloudwatch_logs.py at boot time
   template:

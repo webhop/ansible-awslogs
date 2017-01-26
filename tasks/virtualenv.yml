@@ -6,7 +6,7 @@
 
 - name: Create virtualenv directory if it doesn't exist
   file:
-    path: "{{ virtualenv_dir }}/awslogs"
+    path: "{{ awslogs_virtualenv_dir }}"
     state: directory
     owner: "{{ scripts_owner }}"
     group: "{{ scripts_group }}"
@@ -15,7 +15,7 @@
 - name: Copy the requirements file
   copy:
     src: requirements.txt
-    dest: "{{ scripts_dir }}/awslogs-requirements.txt"
+    dest: "{{ awslogs_scripts_dir }}/awslogs-requirements.txt"
     owner: "{{ scripts_owner }}"
     group: "{{ scripts_group }}"
     mode: 0755
@@ -23,6 +23,6 @@
 
 - name: Create virtualenv if create_virtualenv
   pip:
-    requirements: "{{ scripts_dir }}/awslogs-requirements.txt"
-    virtualenv: "{{ virtualenv_dir }}/awslogs"
+    requirements: "{{ awslogs_scripts_dir }}/awslogs-requirements.txt"
+    virtualenv: "{{ awslogs_virtualenv_dir }}"
   when: create_virtualenv

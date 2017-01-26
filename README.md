@@ -98,7 +98,7 @@ batch_size = 10
 ```yaml
 - name: Add log_group configuration block for apache
   blockinfile:
-    dest: "{{ scripts_dir }}/logs_group_configuration.py"
+    dest: "{{ awslogs_scripts_dir }}/logs_group_configuration.py"
     create: no
     insertafter: "COMPONENT_SPECIFIC_CONF_BLOCKS_FOLLOW"
     marker: "# {mark} MYMODULE LOG CONFIG"
