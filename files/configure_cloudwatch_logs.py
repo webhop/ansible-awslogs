@@ -9,12 +9,11 @@ import sys
 import boto
 import hashlib
 import re
+import yaml
 import jinja2
 from boto import ec2, utils, logs
 
 LOG = logging.getLogger(__name__)
-
-from logs_group_configuration import LOGS_GROUP_CONFIGURATION
 
 
 def get_instance_config():
@@ -57,61 +56,78 @@ def get_my_instance_object(instance_id):
             return instance
 
 
-def configure_logging(args):
-    LOG.info("Getting instance metadata...")
-    inst_config = get_instance_config()
-    region = inst_config["region"]
-
-    # Get instance object
-    inst = get_my_instance_object(inst_config["inst_id"])
-    tags = inst.tags
-    vpc_id = inst.vpc_id
-
-    template_vars = {}
-    # The database is usually named after the brandname
-    template_vars["env"] = tags["environment"]
-    template_vars["brand"] = tags["brand"]
-
-    # write the settings file from the template
-    templateLoader = jinja2.FileSystemLoader(searchpath="/")
-    templateEnv = jinja2.Environment(loader=templateLoader)
-
-    config_template_folder = args[1]
+def agent_config_render_dict(config_template_folder):
     LOG.info("Reading awslogs agent configuration templates from {0}".format(config_template_folder))
     template_filenames = filter(lambda name: name.endswith(".conf.j2"), os.listdir(config_template_folder))
-    render_map = dict(map(lambda file:
-             ("{0}/{1}".format(config_template_folder, file), "/var/awslogs/etc/config/{0}".format(file[:-3])),
-             template_filenames))
-    # also render the main configuration file
-    render_map[args[2]] = "/var/awslogs/etc/awslogs.conf"
 
+    return dict(map(lambda filename:
+             ("{0}/{1}".format(config_template_folder, filename), "/var/awslogs/etc/config/{0}".format(filename[:-3])),
+                          template_filenames))
+
+
+def render_agent_config_templates(render_map, template_vars):
+    template_loader = jinja2.FileSystemLoader(searchpath="/")
+    template_env = jinja2.Environment(loader=template_loader)
     LOG.info("Rendering the following awslogs agent configuration templates: {0}".format(render_map))
     for template_source in render_map:
-        template = templateEnv.get_template(template_source)
+        template = template_env.get_template(template_source)
         template_render_target = render_map[template_source]
 
         with open(template_render_target, 'w') as f:
             f.write(template.render(template_vars))
 
+
+def consolidated_awslogs_config(config_template_folder):
+    """Merges all the config files (AWS-side) of each component using awslogs"""
+    awslogs_config_files = filter(lambda name: name.endswith(".yml"), os.listdir(config_template_folder))
+    awslogs_config = {}
+    # merge all the AWS-side configuration files from all the components in this bake
+    for config_filename in awslogs_config_files:
+        with open(config_filename, 'r') as aws_config_file:
+            awslogs_config.update(yaml.load(aws_config_file))
+    return awslogs_config
+
+
+def configure_logging(args):
+    awslogs_agent_config_dir = args[1]
+    awslogs_scripts_dir = args[2]
+
+    LOG.info("Getting instance metadata...")
+    inst_config = get_instance_config()
+    region = inst_config["region"]
+    this_instance = get_my_instance_object(inst_config["inst_id"])
+
+    template_vars = {"env": this_instance.tags["environment"], "brand": this_instance.tags["brand"]}
+    render_map = agent_config_render_dict(awslogs_agent_config_dir)
+    # also render the main configuration file
+    render_map[awslogs_scripts_dir + "/awslogs-agent.conf.j2"] = "/var/awslogs/etc/awslogs.conf"
+    render_agent_config_templates(render_map, template_vars)
+
     conn = boto.logs.connect_to_region(region)
 
-    for log_group in LOGS_GROUP_CONFIGURATION:
-        log_group_name = log_group % template_vars
-        retention_days = LOGS_GROUP_CONFIGURATION[log_group]['retention_days']
-        LOG.info("Setting retention policy of {0} days on log group {1}".format(str(retention_days), log_group_name))
+    for log_stream in consolidated_awslogs_config(awslogs_agent_config_dir):
+        log_group_name = "{0}-{1}-{2}".format(template_vars["env"],
+                                              template_vars["brand"],
+                                              log_stream['log_file'])
+        retention_days = log_stream['retention']
+        LOG.info("Setting retention policy of {0} days on log group {1} for {2}".format(str(retention_days),
+                                                                                        log_group_name,
+                                                                                        log_stream))
         try:
             conn.set_retention(log_group_name, retention_days)
         except:
             LOG.error("Couldn't find log group {0}".format(log_group_name))
 
-        for metric_filter in LOGS_GROUP_CONFIGURATION[log_group].get('metric_filters', []):
-            filter_name = metric_filter['name'] % template_vars
-            filter_pattern = metric_filter['filter_pattern']
-            metric_transformations = metric_filter['metric_transformations']
+        for metric_filter in log_stream.get('metric_filters', []):
+            filter_name = "{0}-{1}-{2}".format(template_vars["env"], template_vars["brand"], metric_filter['name'])
+            filter_pattern = metric_filter['pattern']
+            metric_transformations = metric_filter['transformations']
             LOG.info("Applying metric filter {0} to {1}".format(filter_name, log_group_name))
-            conn.put_metric_filter(log_group_name=log_group_name, filter_name=filter_name, filter_pattern=filter_pattern, metric_transformations=metric_transformations)
+            conn.put_metric_filter(log_group_name=log_group_name, filter_name=filter_name,
+                                   filter_pattern=filter_pattern, metric_transformations=metric_transformations)
 
 if __name__ == "__main__":
     FORMAT = "%(asctime)-15s : %(levelname)-8s : %(message)s"
     logging.basicConfig(format=FORMAT, level=logging.INFO)
     configure_logging(sys.argv)
+    # args are {{ awslogs_agent_config_dir }} {{ awslogs_scripts_dir }}

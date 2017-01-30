@@ -9,7 +9,7 @@ console log
 script
 
     echo "Starting cloudwatch logs retention/metrics configuration..."
-    {{ awslogs_virtualenv_dir }}/bin/python {{ awslogs_scripts_dir }}/configure_cloudwatch_logs.py {{ awslogs_agent_config_dir }} {{ awslogs_scripts_dir }}/awslogs-agent.conf.j2
+    {{ awslogs_virtualenv_dir }}/bin/python {{ awslogs_scripts_dir }}/configure_cloudwatch_logs.py {{ awslogs_agent_config_dir }} {{ awslogs_scripts_dir }}
 
     echo "Restarting the awslog (Cloudwatch logs) daemon..."
     /usr/sbin/service awslogs restart
