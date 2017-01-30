@@ -1,0 +1,10 @@
+- name: "Template the agent config template"
+  template:
+    src: agent_config.j2.j2
+    dest: "{{ awslogs_agent_config_dir }}/{{ log_config.component }}.conf.j2"
+
+- name: "Write the config to Yaml file"
+  blockinfile:
+    src: |
+      "{{ log_config | to_nice_yaml() }}"
+    dest: "{{ awslogs_agent_config_dir }}/{{ log_config.component }}.yml"
