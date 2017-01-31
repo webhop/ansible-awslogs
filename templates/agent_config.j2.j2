@@ -1,4 +1,4 @@
-{% for logstream in log_config.logstreams %}
+{% for logstream in log_config %}
 [{{ logstream.log_file }}]
 file = {{ logstream.log_file }}
 {# env and brand are templated at boot time, not now #}
