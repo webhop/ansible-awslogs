@@ -1,6 +1,7 @@
 - name: "Template the agent config template"
   template:
-    src: templates/agent_config.j2.j2
+    # because this is being called by the including playbook we need to reference the template from its root
+    src: roles/awslogs/templates/agent_config.j2.j2
     dest: "{{ awslogs_agent_config_dir }}/{{ awslogs_component }}.conf.j2"
 
 - name: "Write the config to Yaml file"
