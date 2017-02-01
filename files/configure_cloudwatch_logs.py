@@ -123,10 +123,10 @@ def configure_logging(args):
             conn.create_log_group(log_group_name)
             conn.set_retention(log_group_name, retention_days)
 
-        for metric_filter in cfg[log_group].get('metric_filters', []):
-            filter_name = "{0}-{1}-{2}".format(template_vars["env"], template_vars["brand"], cfg[log_group][metric_filter]['name'])
-            filter_pattern = cfg[log_group][metric_filter]['pattern']
-            metric_transformations = cfg[log_group][metric_filter]['transformations']
+        for metric_filter in cfg[log_group].get('metric_filters'):
+            filter_name = "{0}-{1}-{2}".format(template_vars["env"], template_vars["brand"], metric_filter['name'])
+            filter_pattern = metric_filter['pattern']
+            metric_transformations = metric_filter['transformations']
             LOG.info("Applying metric filter {0} to {1}".format(filter_name, log_group_name))
             conn.put_metric_filter(log_group_name=log_group_name, filter_name=filter_name,
                                    filter_pattern=filter_pattern, metric_transformations=metric_transformations)
