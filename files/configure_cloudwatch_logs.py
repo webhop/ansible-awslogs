@@ -83,8 +83,8 @@ def consolidated_awslogs_config(config_template_folder):
     awslogs_config = {}
     # merge all the AWS-side configuration files from all the components in this bake
     for config_filename in awslogs_config_files:
-        with open(config_filename, 'r') as aws_config_file:
-            awslogs_config.update(yaml.load(aws_config_file))
+        with open(os.path.join(config_template_folder, config_filename), 'r') as aws_config_file:
+            awslogs_config.update(dict(yaml.load(aws_config_file)))
     return awslogs_config
 
 
@@ -105,14 +105,17 @@ def configure_logging(args):
 
     conn = boto.logs.connect_to_region(region)
 
-    for log_stream in consolidated_awslogs_config(awslogs_agent_config_dir):
+    cfg = consolidated_awslogs_config(awslogs_agent_config_dir)
+    LOG.info("Consolidated config is: {0}".format(cfg))
+    for log_group in cfg:
+        LOG.info("Setting up log group {0}".format(cfg[log_group]))
         log_group_name = "{0}-{1}-{2}".format(template_vars["env"],
                                               template_vars["brand"],
-                                              log_stream['log_file'])
-        retention_days = log_stream['retention']
+                                              cfg[log_group]['log_file'])
+        retention_days = cfg[log_group]['retention']
         LOG.info("Setting retention policy of {0} days on log group {1} for {2}".format(str(retention_days),
                                                                                         log_group_name,
-                                                                                        log_stream))
+                                                                                        log_group))
         try:
             conn.set_retention(log_group_name, retention_days)
         except logs.exception.ResourceNotFoundException:
@@ -120,10 +123,10 @@ def configure_logging(args):
             conn.create_log_group(log_group_name)
             conn.set_retention(log_group_name, retention_days)
 
-        for metric_filter in log_stream.get('metric_filters', []):
-            filter_name = "{0}-{1}-{2}".format(template_vars["env"], template_vars["brand"], metric_filter['name'])
-            filter_pattern = metric_filter['pattern']
-            metric_transformations = metric_filter['transformations']
+        for metric_filter in cfg[log_group].get('metric_filters', []):
+            filter_name = "{0}-{1}-{2}".format(template_vars["env"], template_vars["brand"], cfg[log_group][metric_filter]['name'])
+            filter_pattern = cfg[log_group][metric_filter]['pattern']
+            metric_transformations = cfg[log_group][metric_filter]['transformations']
             LOG.info("Applying metric filter {0} to {1}".format(filter_name, log_group_name))
             conn.put_metric_filter(log_group_name=log_group_name, filter_name=filter_name,
                                    filter_pattern=filter_pattern, metric_transformations=metric_transformations)
