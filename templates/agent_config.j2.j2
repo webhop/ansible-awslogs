@@ -1,8 +1,8 @@
-{% for logstream in log_config %}
-[{{ log_config[logstream].log_file }}]
-file = {{ log_config[logstream].log_file }}
+{% for logstream in vars[awslogs_config] %}
+[{{ vars[awslogs_config][logstream].log_file }}]
+file = {{ vars[awslogs_config][logstream].log_file }}
 {# env and brand are templated at boot time, not now #}
-log_group_name = {{'{{ env }}'}}-{{'{{ brand }}'}}-{{ log_config[logstream].log_file }}
+log_group_name = {{'{{ env }}'}}-{{'{{ brand }}'}}-{{ vars[awslogs_config][logstream].log_file }}
 log_stream_name = {instance_id}
 datetime_format = [%a %b %d %H:%M:%S.%f %Y]
 batch_size = 10

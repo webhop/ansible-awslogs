@@ -6,6 +6,7 @@
 
 - name: "Write the config to Yaml file"
   blockinfile:
-    src: |
-      "{{ log_config | to_nice_yaml() }}"
+    create: yes
+    block: |
+      {{ vars[awslogs_config] | to_nice_yaml(indent = 2) }}
     dest: "{{ awslogs_agent_config_dir }}/{{ awslogs_component }}.yml"
