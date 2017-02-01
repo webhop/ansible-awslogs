@@ -115,8 +115,10 @@ def configure_logging(args):
                                                                                         log_stream))
         try:
             conn.set_retention(log_group_name, retention_days)
-        except:
-            LOG.error("Couldn't find log group {0}".format(log_group_name))
+        except logs.exception.ResourceNotFoundException:
+            LOG.info("Creating log group {0}".format(log_group_name))
+            conn.create_log_group(log_group_name)
+            conn.set_retention(log_group_name, retention_days)
 
         for metric_filter in log_stream.get('metric_filters', []):
             filter_name = "{0}-{1}-{2}".format(template_vars["env"], template_vars["brand"], metric_filter['name'])
