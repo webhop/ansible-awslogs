@@ -1,3 +1,4 @@
 boto
 jinja2
 python-dateutil
+pyyaml
