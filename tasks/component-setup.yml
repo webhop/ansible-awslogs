@@ -8,5 +8,5 @@
   blockinfile:
     create: yes
     block: |
-      {{ vars[awslogs_config] | to_nice_yaml(indent = 2) }}
+      {{ vars[awslogs_config] | to_nice_yaml }}
     dest: "{{ awslogs_agent_config_dir }}/{{ awslogs_component }}.yml"
