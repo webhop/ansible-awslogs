@@ -106,9 +106,7 @@ def configure_logging(args):
     conn = boto.logs.connect_to_region(region)
 
     cfg = consolidated_awslogs_config(awslogs_agent_config_dir)
-    LOG.info("Consolidated config is: {0}".format(cfg))
     for log_group in cfg:
-        LOG.info("Setting up log group {0}".format(cfg[log_group]))
         log_group_name = "{0}-{1}-{2}".format(template_vars["env"],
                                               template_vars["brand"],
                                               cfg[log_group]['log_file'])
