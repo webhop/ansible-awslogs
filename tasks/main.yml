@@ -49,15 +49,10 @@
     mode: 0755
     recurse: yes
 
-- name: Install configure_cloudwatch_logs.py which renders the above into /var/awslogs/etc/{awslogs.conf|config}
+- name: Install configure_cloudwatch_logs.py which reads component config from the above
   copy:
     src: configure_cloudwatch_logs.py
     dest: "{{ awslogs_scripts_dir }}/configure_cloudwatch_logs.py"
-
-- name: Install logs_group_configuration.py which is included by the above
-  copy:
-    src: logs_group_configuration.py
-    dest: "{{ awslogs_scripts_dir }}/logs_group_configuration.py"
 
 - name: Install Upstart script which calls configure_cloudwatch_logs.py at boot time
   template:
