@@ -25,7 +25,7 @@ Add a task like the following:
 ```yaml
 # register this component with awslogs using log_config
 - name: Setup logging for My Component
-  include: ../../awslogs/tasks/component-setup.yml config=log_config awslogs_component=mycomponent
+  include: ../../awslogs/tasks/component-setup.yml awslogs_config=log_config awslogs_component=mycomponent
 ```
 
 The log_config variable needs to have a format like the following example:
