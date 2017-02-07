@@ -97,7 +97,10 @@ def configure_logging(args):
     region = inst_config["region"]
     this_instance = get_my_instance_object(inst_config["inst_id"])
 
-    template_vars = {"env": this_instance.tags["environment"], "brand": this_instance.tags["brand"]}
+    template_vars = {
+        "env": this_instance.tags["environment"],
+        "brand": this_instance.tags.get("brand", this_instance.tags["component"])
+    }
     render_map = agent_config_render_dict(awslogs_agent_config_dir)
     # also render the main configuration file
     render_map[awslogs_scripts_dir + "/awslogs-agent.conf.j2"] = "/var/awslogs/etc/awslogs.conf"
@@ -116,7 +119,7 @@ def configure_logging(args):
                                                                                         log_group))
         try:
             conn.set_retention(log_group_name, retention_days)
-        except logs.exception.ResourceNotFoundException:
+        except logs.exceptions.ResourceNotFoundException:
             LOG.info("Creating log group {0}".format(log_group_name))
             conn.create_log_group(log_group_name)
             conn.set_retention(log_group_name, retention_days)
