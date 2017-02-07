@@ -1,28 +1,31 @@
 ---
-- name: Install virtualenv package
-  pip:
-      name: virtualenv
-      state: latest
-
-- name: Create virtualenv directory if it doesn't exist
+- name: Ensure virtualenv directory exists
   file:
     path: "{{ awslogs_virtualenv_dir }}"
     state: directory
     owner: "{{ scripts_owner }}"
     group: "{{ scripts_group }}"
     mode: 0755
+  register:
+    virtualenv_dir
 
-- name: Copy the requirements file
-  copy:
-    src: requirements.txt
-    dest: "{{ awslogs_scripts_dir }}/awslogs-requirements.txt"
-    owner: "{{ scripts_owner }}"
-    group: "{{ scripts_group }}"
-    mode: 0755
-  when: create_virtualenv
+- block:
+  - name: Install virtualenv package if virtualenv dir was created
+    pip:
+      name: virtualenv
+      state: latest
 
-- name: Create virtualenv if create_virtualenv
-  pip:
-    requirements: "{{ awslogs_scripts_dir }}/awslogs-requirements.txt"
-    virtualenv: "{{ awslogs_virtualenv_dir }}"
-  when: create_virtualenv
+  - name: Copy the requirements file if virtualenv dir was created
+    copy:
+      src: requirements.txt
+      dest: "{{ awslogs_scripts_dir }}/awslogs-requirements.txt"
+      owner: "{{ scripts_owner }}"
+      group: "{{ scripts_group }}"
+      mode: 0755
+
+  - name: Install virtualenv requirements if virtualenv dir was created
+    pip:
+      requirements: "{{ awslogs_scripts_dir }}/awslogs-requirements.txt"
+      virtualenv: "{{ awslogs_virtualenv_dir }}"
+
+  when: virtualenv_dir | changed
