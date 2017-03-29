@@ -40,12 +40,11 @@
     src: awslogs.service
     dest: /etc/systemd/system/awslogs.service
   when: ansible_lsb.major_release|int >= 16
-  
+
 - name: Install the cloudwatch agent config template
   copy:
     src: awslogs-agent.conf.j2
     dest: "{{ awslogs_scripts_dir }}/awslogs-agent.conf.j2"
-  when: ansible_lsb.major_release|int >= 16
 
 - name: "Ensure {{ awslogs_agent_config_dir }} exists for clients to put their config"
   file:
