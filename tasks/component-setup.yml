@@ -1,7 +1,12 @@
+- name: "Override the role name in the template search path"
+  set_fact:
+    awslogs_role_name: awslogs
+  when: awslogs_role_name is not defined
+
 - name: "Template the agent config template"
   template:
     # because this is being called by the including playbook we need to reference the template from its root
-    src: roles/awslogs/templates/agent_config.j2.j2
+    src: "roles/{{ awslogs_role_name }}/templates/agent_config.j2.j2"
     dest: "{{ awslogs_agent_config_dir }}/{{ awslogs_component }}.conf.j2"
 
 - name: "Write the config to Yaml file"
