@@ -1,8 +1,3 @@
-- name: "Override the role name in the template search path"
-  set_fact:
-    awslogs_role_name: awslogs
-  when: awslogs_role_name is not defined
-
 - name: "Template the agent config template"
   template:
     # because this is being called by the including playbook we need to reference the template from its root
