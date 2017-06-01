@@ -23,4 +23,5 @@
       requirements: "{{ awslogs_scripts_dir }}/awslogs-requirements.txt"
       virtualenv: "{{ awslogs_virtualenv_dir }}"
 
+  # Only perform the virtualenv create if the directory doesn't exist
   when: awslogs_virtualenv_dir_output | changed
