@@ -10,11 +10,6 @@
     awslogs_virtualenv_dir_output
 
 - block:
-  - name: Install virtualenv package if virtualenv dir was created
-    pip:
-      name: virtualenv
-      state: latest
-
   - name: Copy the requirements file if virtualenv dir was created
     copy:
       src: requirements.txt
