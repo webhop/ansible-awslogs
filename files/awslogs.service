@@ -5,9 +5,9 @@ After=rc-local.service
 [Service]
 Type=simple
 Restart=always
-TimeoutSec=infinity
+TimeoutSec=10s
 PIDFile=/var/awslogs/state/awslogs.pid
-ExecStart=/var/awslogs/bin/awslogs-agent-launcher.sh --start --background --pidfile $PIDFILE --user awslogs --chuid awslogs &
+ExecStart=/var/awslogs/bin/awslogs-agent-launcher.sh --start --background --pidfile $PIDFILE --user awslogs --chuid awslogs
 
 [Install]
 WantedBy=multi-user.target
