@@ -31,6 +31,7 @@ def get_instance_config():
         # IndexError because boto throws this when it tries to parse empty response
         raise SystemExit("Could not connect to instance metadata endpoint, bailing...")
 
+    config["account_id"] = metadata["document"]["accountId"]
     config["inst_id"] = identity_data["document"]["instanceId"]
     config["region"] = identity_data["document"]["region"]
     config["reservation_id"] = metadata["reservation-id"]
@@ -94,6 +95,7 @@ def configure_logging(args):
 
     LOG.info("Getting instance metadata...")
     inst_config = get_instance_config()
+    account_id = inst_config["account_id"]
     region = inst_config["region"]
     this_instance = get_my_instance_object(inst_config["inst_id"])
 
@@ -134,13 +136,19 @@ def configure_logging(args):
 
         subscription_filter = cfg[log_group].get('subscription_filter')
         if subscription_filter:
-            filter_name = subscription_filter['name']
+            template_context = {
+                "account_id": account_id,
+                "region": region,
+                "tags": this_instance.tags
+            }
+            filter_name = jinja2.Template(subscription_filter['name']).render(template_context)
+            destination_arn = jinja2.Template(subscription_filter['destination_arn']).render(template_context)
             LOG.info("Applying subscription filter {0} to {1}".format(filter_name, log_group_name))
             conn.put_subscription_filter(
                 logGroupName=log_group_name,
                 filterName=filter_name,
                 filterPattern=subscription_filter['pattern'],
-                destinationArn=subscription_filter['destination_arn'],
+                destinationArn=destination_arn,
                 distribution='ByLogStream'
             )
 
