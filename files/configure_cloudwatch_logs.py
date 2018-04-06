@@ -132,6 +132,18 @@ def configure_logging(args):
             conn.put_metric_filter(log_group_name=log_group_name, filter_name=filter_name,
                                    filter_pattern=filter_pattern, metric_transformations=metric_transformations)
 
+        subscription_filter = cfg[log_group].get('subscription_filter')
+        if subscription_filter:
+            filter_name = subscription_filter['name']
+            LOG.info("Applying subscription filter {0} to {1}".format(filter_name, log_group_name))
+            conn.put_subscription_filter(
+                logGroupName=log_group_name,
+                filterName=filter_name,
+                filterPattern=subscription_filter['pattern'],
+                destinationArn=subscription_filter['destination_arn'],
+                distribution='ByLogStream'
+            )
+
 if __name__ == "__main__":
     FORMAT = "%(asctime)-15s : %(levelname)-8s : %(message)s"
     logging.basicConfig(format=FORMAT, level=logging.INFO)
