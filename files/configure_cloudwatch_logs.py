@@ -31,7 +31,7 @@ def get_instance_config():
         # IndexError because boto throws this when it tries to parse empty response
         raise SystemExit("Could not connect to instance metadata endpoint, bailing...")
 
-    config["account_id"] = metadata["document"]["accountId"]
+    config["account_id"] = identity_data["document"]["accountId"]
     config["inst_id"] = identity_data["document"]["instanceId"]
     config["region"] = identity_data["document"]["region"]
     config["reservation_id"] = metadata["reservation-id"]
