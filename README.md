@@ -43,6 +43,10 @@ log_config:
             metricNamespace: WEBHOP
             metricValue: '1'
             default_value: 0
+    subscription_filter:
+      name: "filter-name"
+      pattern: ""
+      destination_arn: "arn:aws:lambda:<region>:<account-id>:function:<function-name>"
 
   apache_access:
     log_file: "/var/log/apache2/access.log"
