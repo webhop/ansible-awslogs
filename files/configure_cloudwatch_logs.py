@@ -16,13 +16,17 @@ import requests
 
 LOG = logging.getLogger(__name__)
 
+EC2_METADATA_SERVICE_ENDPOINT = "http://169.254.169.254/latest"
+
 
 def get_instance_identity():
-    return requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document').json()
+    return requests.get('{0}/dynamic/instance-identity/document'.format(
+        EC2_METADATA_SERVICE_ENDPOINT)).json()
 
 
 def get_instance_reservation_id():
-    return requests.get('http://169.254.169.254/latest/meta-data/reservation-id').text
+    return requests.get('{0}/meta-data/reservation-id'.format(
+        EC2_METADATA_SERVICE_ENDPOINT)).text
 
 
 def get_instance_config():
