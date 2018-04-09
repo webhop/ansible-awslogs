@@ -147,7 +147,9 @@ def configure_logging(args):
             )
         except conn.exceptions.ResourceNotFoundException:
             LOG.info("Creating log group {0}".format(log_group_name))
-            conn.create_log_group(log_group_name)
+            conn.create_log_group(
+                logGroupName=log_group_name
+            )
             conn.put_retention_policy(
                 logGroupName=log_group_name,
                 retentionInDays=retention_days
