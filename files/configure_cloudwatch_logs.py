@@ -7,7 +7,6 @@ import logging
 import os
 import sys
 import boto3
-import boto
 import hashlib
 import re
 import yaml
