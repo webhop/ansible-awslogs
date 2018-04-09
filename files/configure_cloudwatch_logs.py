@@ -151,7 +151,6 @@ def configure_logging(args):
                 logGroupName=log_group_name,
                 retentionInDays=retention_days
             )
-            conn.put_retention_policy(log_group_name, retention_days)
 
         for metric_filter in cfg[log_group].get('metric_filters', []):
             filter_name = "{0}-{1}-{2}".format(template_vars["env"], template_vars["brand"], metric_filter['name'])
