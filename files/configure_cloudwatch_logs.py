@@ -6,14 +6,23 @@ Write the cloudwatch logs configuration file
 import logging
 import os
 import sys
+import boto3
 import boto
 import hashlib
 import re
 import yaml
 import jinja2
-from boto import ec2, utils, logs
+import requests
 
 LOG = logging.getLogger(__name__)
+
+
+def get_instance_identity():
+    return requests.get('http://169.254.169.254/latest/dynamic/instance-identity/document').json()
+
+
+def get_instance_reservation_id():
+    return requests.get('http://169.254.169.254/latest/meta-data/reservation-id').text
 
 
 def get_instance_config():
@@ -25,20 +34,27 @@ def get_instance_config():
     config = {}
     # Find my instance ID
     try:
-        identity_data = utils.get_instance_identity(timeout=2, num_retries=2)
-        metadata = utils.get_instance_metadata(timeout=2, num_retries=2)
+        identity_data = get_instance_identity()
+        reservation_id = get_instance_reservation_id()
     except IndexError:
         # IndexError because boto throws this when it tries to parse empty response
         raise SystemExit("Could not connect to instance metadata endpoint, bailing...")
 
-    config["account_id"] = identity_data["document"]["accountId"]
-    config["inst_id"] = identity_data["document"]["instanceId"]
-    config["region"] = identity_data["document"]["region"]
-    config["reservation_id"] = metadata["reservation-id"]
+    config["account_id"] = identity_data["accountId"]
+    config["inst_id"] = identity_data["instanceId"]
+    config["region"] = identity_data["region"]
+    config["reservation_id"] = get_instance_reservation_id()
 
     for k, v in config.iteritems():
         LOG.info("Found %s with value %s", k, v)
     return config
+
+
+def get_instance_tags(instance):
+    tags_dict = {}
+    for tag_object in instance["Tags"]:
+        tags_dict[tag_object["Key"]] = tag_object["Value"]
+    return tags_dict
 
 
 def get_my_instance_object(instance_id):
@@ -48,13 +64,12 @@ def get_my_instance_object(instance_id):
 
     """
     region = get_instance_config()['region']
-    conn = boto.ec2.connect_to_region(region)
-    reservations = conn.get_all_instances()
-    instances = [i for r in reservations for i in r.instances]
-
-    for instance in instances:
-        if instance.id == instance_id:
-            return instance
+    conn = boto3.client('ec2', region_name=region)
+    resp = conn.describe_instances(InstanceIds=[instance_id])
+    for reservation in resp["Reservations"]:
+        for instance in reservation["Instances"]:
+            if instance["InstanceId"] == instance_id:
+                return instance
 
 
 def agent_config_render_dict(config_template_folder):
@@ -98,17 +113,18 @@ def configure_logging(args):
     account_id = inst_config["account_id"]
     region = inst_config["region"]
     this_instance = get_my_instance_object(inst_config["inst_id"])
+    this_instance_tags = get_instance_tags(this_instance)
 
     template_vars = {
-        "env": this_instance.tags["environment"],
-        "brand": this_instance.tags.get("brand", this_instance.tags["component"])
+        "env": this_instance_tags["environment"],
+        "brand": this_instance_tags.get("brand", this_instance_tags["component"])
     }
     render_map = agent_config_render_dict(awslogs_agent_config_dir)
     # also render the main configuration file
     render_map[awslogs_scripts_dir + "/awslogs-agent.conf.j2"] = "/var/awslogs/etc/awslogs.conf"
     render_agent_config_templates(render_map, template_vars)
 
-    conn = boto.logs.connect_to_region(region)
+    conn = boto3.client('logs', region_name=region)
 
     cfg = consolidated_awslogs_config(awslogs_agent_config_dir)
     for log_group in cfg:
@@ -119,12 +135,19 @@ def configure_logging(args):
         LOG.info("Setting retention policy of {0} days on log group {1} for {2}".format(str(retention_days),
                                                                                         log_group_name,
                                                                                         log_group))
+
         try:
-            conn.set_retention(log_group_name, retention_days)
-        except logs.exceptions.ResourceNotFoundException:
+            conn.put_retention_policy(
+                logGroupName=log_group_name,
+                retentionInDays=retention_days
+            )
+        except conn.exceptions.ResourceNotFoundException:
             LOG.info("Creating log group {0}".format(log_group_name))
-            conn.create_log_group(log_group_name)
-            conn.set_retention(log_group_name, retention_days)
+            conn.put_retention_policy(
+                logGroupName=log_group_name,
+                retentionInDays=retention_days
+            )
+            conn.put_retention_policy(log_group_name, retention_days)
 
         for metric_filter in cfg[log_group].get('metric_filters', []):
             filter_name = "{0}-{1}-{2}".format(template_vars["env"], template_vars["brand"], metric_filter['name'])
@@ -139,7 +162,7 @@ def configure_logging(args):
             template_context = {
                 "account_id": account_id,
                 "region": region,
-                "tags": this_instance.tags
+                "tags": this_instance_tags,
             }
             filter_name = jinja2.Template(subscription_filter['name']).render(template_context)
             destination_arn = jinja2.Template(subscription_filter['destination_arn']).render(template_context)
