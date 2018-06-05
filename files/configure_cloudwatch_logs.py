@@ -159,8 +159,8 @@ def configure_logging(args):
             filter_pattern = metric_filter['pattern']
             metric_transformations = metric_filter['transformations']
             LOG.info("Applying metric filter {0} to {1}".format(filter_name, log_group_name))
-            conn.put_metric_filter(log_group_name=log_group_name, filter_name=filter_name,
-                                   filter_pattern=filter_pattern, metric_transformations=metric_transformations)
+            conn.put_metric_filter(logGroupName=log_group_name, filterName=filter_name,
+                                   filterPattern=filter_pattern, metricTransformations=metric_transformations)
 
         subscription_filter = cfg[log_group].get('subscription_filter')
         if subscription_filter:
